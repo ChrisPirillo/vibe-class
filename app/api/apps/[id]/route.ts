@@ -2,8 +2,10 @@ import { NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { auth } from '@/auth';
 import { pool } from '@/lib/db';
-import { logSubmissionHistory } from '@/lib/queries';
-import { safeName } from '@/lib/filename';
+
+function safeName(input: string) {
+  return input.replace(/[^a-z0-9_-]/gi, '_');
+}
 
 async function requireAdmin() {
   const session = await auth();
@@ -14,7 +16,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const result = await pool.query(
-    `SELECT s.*, st.name, st.student_number FROM submissions s JOIN students st ON st.id = s.student_id WHERE s.id = $1`,
+    `SELECT s.*, st.name FROM submissions s JOIN students st ON st.id = s.student_id WHERE s.id = $1`,
     [params.id]
   );
 
@@ -24,7 +26,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   const url = new URL(request.url);
   if (url.searchParams.get('download') === '1') {
     const zip = new JSZip();
-    const fileBase = `${safeName(row.name)}_${row.student_number}_${safeName(row.keyword)}`;
+    const fileBase = `${safeName(row.name)}_${safeName(row.keyword)}`;
     zip.file(`${fileBase}.html`, row.html_code);
     const data = await zip.generateAsync({ type: 'uint8array' });
     return new NextResponse(data, {
@@ -49,13 +51,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const form = await request.formData();
   const method = String(form.get('_method') || '').toUpperCase();
 
-  const current = await pool.query('SELECT * FROM submissions WHERE id = $1', [params.id]);
-  const existing = current.rows[0];
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
   if (method === 'DELETE') {
     await pool.query('DELETE FROM submissions WHERE id = $1', [params.id]);
-    await logSubmissionHistory(existing.id, existing.student_id, 'delete', existing.keyword, existing.html_code);
     return NextResponse.redirect(new URL('/zartan', request.url));
   }
 
@@ -66,15 +63,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: 'keyword and htmlCode are required' }, { status: 400 });
   }
 
-  try {
-    await pool.query('UPDATE submissions SET keyword = $1, html_code = $2 WHERE id = $3', [keyword.toLowerCase(), htmlCode, params.id]);
-  } catch (error: any) {
-    if (error?.code === '23505') {
-      return NextResponse.json({ error: 'Duplicate keyword for this student.' }, { status: 409 });
-    }
-    throw error;
-  }
-
-  await logSubmissionHistory(existing.id, existing.student_id, 'update', keyword.toLowerCase(), htmlCode);
+  await pool.query('UPDATE submissions SET keyword = $1, html_code = $2 WHERE id = $3', [keyword.toLowerCase(), htmlCode, params.id]);
   return NextResponse.redirect(new URL('/zartan', request.url));
 }
