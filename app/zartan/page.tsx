@@ -1,11 +1,11 @@
+import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 import { findStudents, getFilteredSubmissions, getSubmissionHistory, getSystemSettings } from '@/lib/queries';
 import { getAdminStatusMessage } from '@/lib/admin-feedback';
 
 export default async function ZartanPage({ searchParams }: { searchParams: { q?: string; status?: string } }) {
-  const admin = await getAdminPayloadFromCookies();
-  if (!admin) redirect('/destro');
+  const session = await auth();
+  if (!session?.user?.email) redirect('/destro');
 
   const studentSearch = searchParams.q?.trim() || '';
   const submissions = await getFilteredSubmissions(studentSearch);

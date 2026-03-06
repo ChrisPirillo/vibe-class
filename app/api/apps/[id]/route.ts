@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import JSZip from 'jszip';
+import { auth } from '@/auth';
 import { pool } from '@/lib/db';
 import { logSubmissionHistory } from '@/lib/queries';
 import { safeName } from '@/lib/filename';
 import { normalizeKeyword } from '@/lib/submission-rules';
-import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 
 async function requireAdmin() {
-  const admin = await getAdminPayloadFromCookies();
-  return Boolean(admin);
+  const session = await auth();
+  return Boolean(session?.user?.email);
 }
 
 function redirectToDashboard(request: Request, status: string) {

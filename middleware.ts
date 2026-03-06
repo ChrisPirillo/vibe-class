@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyNetlifyToken, NETLIFY_IDENTITY_COOKIE } from '@/lib/netlify-auth';
+import { getToken } from 'next-auth/jwt';
 
 const protectedPublicRoutes = ['/', '/apps', '/portfolio', '/submit'];
 const ADMIN_PATHS = ['/zartan'];
@@ -11,9 +11,8 @@ function pathMatches(pathname: string, routes: string[]) {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const identityCookie = request.cookies.get(NETLIFY_IDENTITY_COOKIE)?.value;
-  const adminPayload = await verifyNetlifyToken(identityCookie);
-  const hasAdminSession = Boolean(adminPayload);
+  const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
+  const hasAdminSession = Boolean(token);
 
   if (pathMatches(pathname, ADMIN_PATHS) && !hasAdminSession) {
     return NextResponse.redirect(new URL('/destro', request.url));

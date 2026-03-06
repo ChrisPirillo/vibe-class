@@ -1,12 +1,12 @@
 import JSZip from 'jszip';
 import { NextResponse } from 'next/server';
+import { auth } from '@/auth';
 import { getAllSubmissions } from '@/lib/queries';
 import { safeName } from '@/lib/filename';
-import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 
 export async function GET() {
-  const admin = await getAdminPayloadFromCookies();
-  if (!admin) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const session = await auth();
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const submissions = await getAllSubmissions();
   const zip = new JSZip();
