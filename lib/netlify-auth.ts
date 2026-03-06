@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 const COOKIE_NAME = 'netlify_identity_token';
 
 function getJwtSecret() {
-  const secret = process.env.NETLIFY_IDENTITY_JWT_SECRET || process.env.JWT_SECRET;
+  const secret = process.env.NETLIFY_IDENTITY_JWT_SECRET;
   if (!secret) return null;
   return new TextEncoder().encode(secret);
 }

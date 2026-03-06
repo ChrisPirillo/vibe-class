@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/auth';
 import { getSystemSettings, setSitePassword } from '@/lib/queries';
+import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 
 function randomPassword(length = 16) {
   const alphabet = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%^&*';
@@ -10,8 +10,8 @@ function randomPassword(length = 16) {
 }
 
 async function ensureAdmin() {
-  const session = await auth();
-  return Boolean(session?.user?.email);
+  const payload = await getAdminPayloadFromCookies();
+  return Boolean(payload);
 }
 
 export async function GET() {

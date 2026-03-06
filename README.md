@@ -4,17 +4,14 @@ Production-ready Next.js App Router project for submission, gallery browsing, st
 
 ## Stack
 - Next.js 14 (App Router) + Tailwind CSS
-- Auth.js / NextAuth.js with Google OAuth
-- Netlify Postgres (`pg`) + Auth Postgres adapter (`@auth/pg-adapter`)
+- Netlify Identity (`netlify-identity-widget`) for admin authentication
+- Netlify Postgres (`pg`)
 - `jszip`, `file-saver`, `js-cookie`
 - Vitest + React Testing Library + Playwright
 
 ## Environment Variables (configure in Netlify UI)
 - `POSTGRES_URL`
-- `NEXTAUTH_URL`
-- `AUTH_SECRET`
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
+- `NETLIFY_IDENTITY_JWT_SECRET`
 
 ## Database Setup
 ```bash
@@ -34,9 +31,10 @@ npm run test:e2e
 ```
 
 ## Product Highlights
-- Public pages (`/`, `/apps`, `/submit`, `/portfolio/[studentId]`) are site-password protected, and submit form failures/success now show status banners via redirect query params.
+- Public pages (`/`, `/apps`, `/submit`, `/portfolio/[studentId]`) are site-password protected, and submit form failures/success now show status banners via redirect query params, and successful submit redirects show confirmation on portfolio pages.
 - Password unlock uses a secure server endpoint (`/api/public/access`) and a 90-day HTTP-only cookie.
-- Admin login at `/destro`; first successful Google login is permanently locked as admin.
+- Admin login at `/destro` uses Netlify Identity widget (manual invite/admin provisioning via Netlify GUI).
+- Middleware validates Netlify Identity JWT for `/zartan` protection and admin bypass of public password gating.
 - Admin dashboard at `/zartan` includes stats, student/submission search filtering, submission editing/deletion with status feedback banners, secure sandboxed app viewing in new tabs, individual ZIP download, intelligent bulk ZIP download naming (`Name_StudentNumber_Keyword`), and submission history tracking.
 - Student submissions enforce one app per student per keyword (case-insensitive), with create/update/delete history persisted in `submission_history`.
 - Student app rendering is sandboxed via `<iframe sandbox="allow-scripts">`.
@@ -48,7 +46,7 @@ app/
     admin/password/route.ts
     apps/[id]/route.ts
     apps/bulk/route.ts
-    auth/[...nextauth]/route.ts
+    auth/netlify-session/route.ts
     portfolio/[studentId]/route.ts
     public/access/route.ts
     submit/route.ts
@@ -64,19 +62,21 @@ app/
   page.tsx
 components/
   AppFrame.tsx
+  IdentityLogin.tsx
   InstructionsModal.tsx
   NavBar.tsx
   PasswordGate.tsx
   PortfolioDownloadButton.tsx
 db/setup.sql
 lib/
-  db.ts
   admin-feedback.ts
+  db.ts
   filename.ts
+  netlify-auth.ts
+  portfolio-feedback.ts
   queries.ts
   submission-rules.ts
   submit-feedback.ts
-auth.ts
 middleware.ts
 tests/
   components/

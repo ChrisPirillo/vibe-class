@@ -1,10 +1,10 @@
-import { auth } from '@/auth';
 import { redirect, notFound } from 'next/navigation';
 import { getSubmissionById } from '@/lib/queries';
+import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 
 export default async function AdminSubmissionViewPage({ params }: { params: { id: string } }) {
-  const session = await auth();
-  if (!session?.user?.email) redirect('/destro');
+  const admin = await getAdminPayloadFromCookies();
+  if (!admin) redirect('/destro');
 
   const submission = await getSubmissionById(params.id);
   if (!submission) return notFound();
