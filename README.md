@@ -37,8 +37,8 @@ npm run test:e2e
 - Public pages (`/`, `/apps`, `/submit`, `/portfolio/[studentId]`) are site-password protected.
 - Password unlock uses a secure server endpoint (`/api/public/access`) and a 90-day HTTP-only cookie.
 - Admin login at `/destro`; first successful Google login is permanently locked as admin.
-- Admin dashboard at `/zartan` includes stats, submission editing/deletion, search, individual ZIP download, bulk ZIP download, and submission history tracking.
-- Student submissions enforce one app per student per keyword (case-insensitive), with create/update/delete history persisted in `submission_history`.
+- Admin dashboard at `/zartan` includes stats, submission editing/deletion, search, individual ZIP download, and bulk ZIP download.
+- Student submissions enforce one app per student per keyword (case-insensitive).
 - Student app rendering is sandboxed via `<iframe sandbox="allow-scripts">`.
 
 ## Exact File Structure
@@ -54,7 +54,6 @@ app/
     submit/route.ts
   apps/page.tsx
   destro/page.tsx
-  portfolio/page.tsx
   portfolio/[studentId]/page.tsx
   submit/page.tsx
   zartan/page.tsx

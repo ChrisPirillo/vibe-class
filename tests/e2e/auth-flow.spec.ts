@@ -10,11 +10,6 @@ test('zartan route protection redirects unauthenticated users', async ({ page })
   await expect(page).toHaveURL(/\/destro/);
 });
 
-test('portfolio finder page renders', async ({ page }) => {
-  await page.goto('/portfolio');
-  await expect(page.getByRole('heading', { name: /find your portfolio/i })).toBeVisible();
-});
-
 test('admin session cookie bypasses public password middleware', async ({ page, context }) => {
   await context.addCookies([
     {

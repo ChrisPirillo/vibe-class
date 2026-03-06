@@ -1,6 +1,6 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { findStudents, getAllSubmissions, getSubmissionHistory, getSystemSettings } from '@/lib/queries';
+import { findStudents, getAllSubmissions, getSystemSettings } from '@/lib/queries';
 
 export default async function ZartanPage({ searchParams }: { searchParams: { q?: string } }) {
   const session = await auth();
@@ -11,7 +11,6 @@ export default async function ZartanPage({ searchParams }: { searchParams: { q?:
   const settings = await getSystemSettings();
   const studentSearch = searchParams.q?.trim() || '';
   const students = await findStudents(studentSearch);
-  const history = await getSubmissionHistory(40);
 
   return (
     <section className="space-y-4">
@@ -63,20 +62,6 @@ export default async function ZartanPage({ searchParams }: { searchParams: { q?:
               #{student.student_number} {student.name} · {student.email}
             </div>
           ))}
-        </div>
-      </div>
-
-
-
-      <div className="card space-y-3">
-        <h3 className="font-semibold">Submission History</h3>
-        <div className="space-y-2 text-xs text-slate-300">
-          {history.map((item) => (
-            <div key={item.id} className="rounded border border-slate-800 p-2">
-              <span className="font-medium uppercase">{item.action}</span> · {item.name} ({item.email}) · {item.keyword}
-            </div>
-          ))}
-          {!history.length && <p className="text-slate-500">No history yet.</p>}
         </div>
       </div>
 

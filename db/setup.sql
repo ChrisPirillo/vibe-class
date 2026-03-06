@@ -18,16 +18,6 @@ CREATE TABLE IF NOT EXISTS submissions (
 CREATE UNIQUE INDEX IF NOT EXISTS submissions_student_keyword_unique
 ON submissions (student_id, lower(keyword));
 
-CREATE TABLE IF NOT EXISTS submission_history (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  submission_id UUID,
-  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-  action TEXT NOT NULL CHECK (action IN ('create', 'update', 'delete')),
-  keyword TEXT NOT NULL,
-  html_code TEXT NOT NULL,
-  changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE IF NOT EXISTS system_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   site_password TEXT NOT NULL DEFAULT 'changeme',

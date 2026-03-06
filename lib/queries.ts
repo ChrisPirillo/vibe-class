@@ -16,11 +16,6 @@ export async function getOrCreateStudent(name: string, email: string): Promise<S
   return created.rows[0];
 }
 
-export async function findStudentByEmail(email: string) {
-  const result = await pool.query<Student>('SELECT * FROM students WHERE lower(email)=lower($1)', [email]);
-  return result.rows[0] || null;
-}
-
 export async function findStudentById(studentId: string) {
   const student = await pool.query<Student>('SELECT * FROM students WHERE id = $1', [studentId]);
   return student.rows[0] || null;
@@ -46,39 +41,11 @@ export async function getSubmissionsByStudent(studentId: string) {
 }
 
 export async function createSubmission(studentId: string, keyword: string, htmlCode: string) {
-  const created = await pool.query<Submission>('INSERT INTO submissions (student_id, keyword, html_code) VALUES ($1, $2, $3) RETURNING *', [
+  return pool.query<Submission>('INSERT INTO submissions (student_id, keyword, html_code) VALUES ($1, $2, $3) RETURNING *', [
     studentId,
     normalizeKeyword(keyword),
     htmlCode
   ]);
-
-  await logSubmissionHistory(created.rows[0].id, studentId, 'create', normalizeKeyword(keyword), htmlCode);
-  return created;
-}
-
-export async function logSubmissionHistory(
-  submissionId: string | null,
-  studentId: string,
-  action: 'create' | 'update' | 'delete',
-  keyword: string,
-  htmlCode: string
-) {
-  await pool.query(
-    'INSERT INTO submission_history (submission_id, student_id, action, keyword, html_code) VALUES ($1, $2, $3, $4, $5)',
-    [submissionId, studentId, action, normalizeKeyword(keyword), htmlCode]
-  );
-}
-
-export async function getSubmissionHistory(limit = 100) {
-  const result = await pool.query(
-    `SELECT h.*, s.name, s.email
-     FROM submission_history h
-     JOIN students s ON s.id = h.student_id
-     ORDER BY h.changed_at DESC
-     LIMIT $1`,
-    [limit]
-  );
-  return result.rows;
 }
 
 export async function getAllSubmissions() {
