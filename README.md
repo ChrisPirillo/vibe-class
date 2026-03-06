@@ -34,7 +34,7 @@ npm run test:e2e
 ```
 
 ## Product Highlights
-- Public pages (`/`, `/apps`, `/submit`, `/portfolio/[studentId]`) are site-password protected, and submit form failures/success now show status banners via redirect query params, and successful submit redirects show confirmation on portfolio pages.
+- Public pages (`/`, `/apps`, `/submit`, `/portfolio/[studentId]`) are site-password protected, and submit form failures/success now show status banners via redirect query params.
 - Password unlock uses a secure server endpoint (`/api/public/access`) and a 90-day HTTP-only cookie.
 - Admin login at `/destro`; first successful Google login is permanently locked as admin.
 - Admin dashboard at `/zartan` includes stats, student/submission search filtering, submission editing/deletion with status feedback banners, secure sandboxed app viewing in new tabs, individual ZIP download, intelligent bulk ZIP download naming (`Name_StudentNumber_Keyword`), and submission history tracking.
@@ -76,7 +76,6 @@ lib/
   queries.ts
   submission-rules.ts
   submit-feedback.ts
-  portfolio-feedback.ts
 auth.ts
 middleware.ts
 tests/
