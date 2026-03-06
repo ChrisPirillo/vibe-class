@@ -8,7 +8,6 @@ export function NavBar() {
         <div className="flex gap-4 text-sm">
           <Link href="/">Gallery</Link>
           <Link href="/apps">All Apps</Link>
-          <Link href="/portfolio">Portfolio</Link>
           <Link href="/submit">Submit</Link>
         </div>
       </nav>

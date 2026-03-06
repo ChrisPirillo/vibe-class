@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import JSZip from 'jszip';
 import { auth } from '@/auth';
 import { pool } from '@/lib/db';
-import { logSubmissionHistory } from '@/lib/queries';
 
 function safeName(input: string) {
   return input.replace(/[^a-z0-9_-]/gi, '_');
@@ -52,13 +51,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const form = await request.formData();
   const method = String(form.get('_method') || '').toUpperCase();
 
-  const current = await pool.query('SELECT * FROM submissions WHERE id = $1', [params.id]);
-  const existing = current.rows[0];
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
   if (method === 'DELETE') {
     await pool.query('DELETE FROM submissions WHERE id = $1', [params.id]);
-    await logSubmissionHistory(existing.id, existing.student_id, 'delete', existing.keyword, existing.html_code);
     return NextResponse.redirect(new URL('/zartan', request.url));
   }
 
@@ -70,6 +64,5 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 
   await pool.query('UPDATE submissions SET keyword = $1, html_code = $2 WHERE id = $3', [keyword.toLowerCase(), htmlCode, params.id]);
-  await logSubmissionHistory(existing.id, existing.student_id, 'update', keyword.toLowerCase(), htmlCode);
   return NextResponse.redirect(new URL('/zartan', request.url));
 }

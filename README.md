@@ -54,7 +54,6 @@ app/
     submit/route.ts
   apps/page.tsx
   destro/page.tsx
-  portfolio/page.tsx
   portfolio/[studentId]/page.tsx
   submit/page.tsx
   zartan/page.tsx
