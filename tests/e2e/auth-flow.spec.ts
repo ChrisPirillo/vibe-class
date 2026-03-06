@@ -10,15 +10,26 @@ test('zartan route protection redirects unauthenticated users', async ({ page })
   await expect(page).toHaveURL(/\/destro/);
 });
 
-test('admin session cookie bypasses public password middleware', async ({ page, context }) => {
+test('zartan secure viewer route is protected', async ({ page }) => {
+  await page.goto('/zartan/view/fake-id');
+  await expect(page).toHaveURL(/\/destro/);
+});
+
+test('portfolio finder page renders', async ({ page }) => {
+  await page.goto('/portfolio');
+  await expect(page.getByRole('heading', { name: /find your portfolio/i })).toBeVisible();
+});
+
+test('public access cookie bypasses password middleware for /apps', async ({ page, context }) => {
   await context.addCookies([
     {
-      name: 'authjs.session-token',
-      value: 'fake',
+      name: 'vibe_site_access',
+      value: 'granted',
       domain: '127.0.0.1',
       path: '/'
     }
   ]);
+
   await page.goto('/apps');
   await expect(page).toHaveURL(/\/apps/);
 });
