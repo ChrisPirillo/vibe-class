@@ -3,6 +3,8 @@ import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 import { findStudents, getFilteredSubmissions, getSubmissionHistory, getSystemSettings } from '@/lib/queries';
 import { getAdminStatusMessage } from '@/lib/admin-feedback';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ZartanPage({ searchParams }: { searchParams: { q?: string; status?: string } }) {
   const admin = await getAdminPayloadFromCookies();
   if (!admin) redirect('/destro');

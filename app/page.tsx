@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { getStudentsWithSubmissions } from '@/lib/queries';
 
+export const dynamic = 'force-dynamic';
+
 export default async function GalleryPage() {
   const students = await getStudentsWithSubmissions();
   const keywordMap = new Map<string, { studentId: string; studentName: string; submissionId: string }[]>();

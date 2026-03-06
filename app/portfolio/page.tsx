@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { findStudentByEmail } from '@/lib/queries';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PortfolioLookupPage({ searchParams }: { searchParams: { email?: string } }) {
   const email = searchParams.email?.trim() || '';
   const student = email ? await findStudentByEmail(email) : null;

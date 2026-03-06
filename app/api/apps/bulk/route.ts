@@ -17,7 +17,7 @@ export async function GET() {
   });
 
   const data = await zip.generateAsync({ type: 'uint8array' });
-  return new NextResponse(data, {
+  return new NextResponse(Buffer.from(data), {
     headers: {
       'Content-Type': 'application/zip',
       'Content-Disposition': 'attachment; filename="all_submissions.zip"'
