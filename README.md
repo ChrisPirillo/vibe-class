@@ -37,7 +37,7 @@ npm run test:e2e
 - Public pages (`/`, `/apps`, `/submit`, `/portfolio/[studentId]`) are site-password protected.
 - Password unlock uses a secure server endpoint (`/api/public/access`) and a 90-day HTTP-only cookie.
 - Admin login at `/destro`; first successful Google login is permanently locked as admin.
-- Admin dashboard at `/zartan` includes stats, student/submission search filtering, submission editing/deletion, secure sandboxed app viewing in new tabs, individual ZIP download, bulk ZIP download, and submission history tracking.
+- Admin dashboard at `/zartan` includes stats, student/submission search filtering, submission editing/deletion, secure sandboxed app viewing in new tabs, individual ZIP download, intelligent bulk ZIP download naming (`Name_StudentNumber_Keyword`), and submission history tracking.
 - Student submissions enforce one app per student per keyword (case-insensitive), with create/update/delete history persisted in `submission_history`.
 - Student app rendering is sandboxed via `<iframe sandbox="allow-scripts">`.
 

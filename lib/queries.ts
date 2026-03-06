@@ -56,6 +56,21 @@ export async function getSubmissionById(submissionId: string) {
   return result.rows[0] || null;
 }
 
+export async function getFilteredSubmissions(search?: string) {
+  if (!search?.trim()) return getAllSubmissions();
+
+  const term = `%${search.toLowerCase()}%`;
+  const result = await pool.query<Submission>(
+    `SELECT s.*, st.name, st.email, st.student_number
+      FROM submissions s
+      JOIN students st ON st.id = s.student_id
+      WHERE lower(st.name) LIKE $1 OR lower(st.email) LIKE $1 OR lower(s.keyword) LIKE $1
+      ORDER BY s.created_at DESC`,
+    [term]
+  );
+  return result.rows;
+}
+
 export async function createSubmission(studentId: string, keyword: string, htmlCode: string) {
   const created = await pool.query<Submission>('INSERT INTO submissions (student_id, keyword, html_code) VALUES ($1, $2, $3) RETURNING *', [
     studentId,

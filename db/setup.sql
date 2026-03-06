@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS submission_history (
   html_code TEXT NOT NULL,
   changed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+CREATE INDEX IF NOT EXISTS submission_history_changed_at_idx
+ON submission_history (changed_at DESC);
 
 CREATE TABLE IF NOT EXISTS system_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

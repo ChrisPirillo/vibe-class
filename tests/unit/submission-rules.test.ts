@@ -7,6 +7,11 @@ describe('submission validation rule', () => {
     expect(isKeywordDuplicate(['GAME'], '  game  ')).toBe(true);
   });
 
+  it('rejects duplicates despite surrounding whitespace', () => {
+    expect(isKeywordDuplicate(['  clock  '], 'clock')).toBe(true);
+    expect(isKeywordDuplicate(['clock'], '   CLOCK   ')).toBe(true);
+  });
+
   it('allows distinct keywords', () => {
     expect(isKeywordDuplicate(['Game'], 'Clock')).toBe(false);
   });

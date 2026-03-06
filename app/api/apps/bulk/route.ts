@@ -12,7 +12,8 @@ export async function GET() {
   const zip = new JSZip();
 
   submissions.forEach((submission) => {
-    zip.file(`${safeName(submission.name || 'student')}_${safeName(submission.keyword)}.html`, submission.html_code);
+    const filename = `${safeName(submission.name || 'student')}_${submission.student_number}_${safeName(submission.keyword)}.html`;
+    zip.file(filename, submission.html_code);
   });
 
   const data = await zip.generateAsync({ type: 'uint8array' });

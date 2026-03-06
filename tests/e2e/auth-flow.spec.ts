@@ -10,6 +10,11 @@ test('zartan route protection redirects unauthenticated users', async ({ page })
   await expect(page).toHaveURL(/\/destro/);
 });
 
+test('zartan secure viewer route is protected', async ({ page }) => {
+  await page.goto('/zartan/view/fake-id');
+  await expect(page).toHaveURL(/\/destro/);
+});
+
 test('portfolio finder page renders', async ({ page }) => {
   await page.goto('/portfolio');
   await expect(page.getByRole('heading', { name: /find your portfolio/i })).toBeVisible();

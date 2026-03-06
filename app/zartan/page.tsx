@@ -1,35 +1,25 @@
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
-import { findStudents, getAllSubmissions, getSubmissionHistory, getSystemSettings } from '@/lib/queries';
+import { findStudents, getFilteredSubmissions, getSubmissionHistory, getSystemSettings } from '@/lib/queries';
 
 export default async function ZartanPage({ searchParams }: { searchParams: { q?: string } }) {
   const session = await auth();
   if (!session?.user?.email) redirect('/destro');
 
-  const submissions = await getAllSubmissions();
+  const studentSearch = searchParams.q?.trim() || '';
+  const submissions = await getFilteredSubmissions(studentSearch);
   const totalStudents = new Set(submissions.map((s) => s.student_id)).size;
   const settings = await getSystemSettings();
-  const studentSearch = searchParams.q?.trim() || '';
-  const loweredQuery = studentSearch.toLowerCase();
-
   const students = await findStudents(studentSearch);
   const history = await getSubmissionHistory(40);
-  const filteredSubmissions = studentSearch
-    ? submissions.filter(
-        (submission) =>
-          submission.name?.toLowerCase().includes(loweredQuery) ||
-          submission.email?.toLowerCase().includes(loweredQuery) ||
-          submission.keyword.toLowerCase().includes(loweredQuery)
-      )
-    : submissions;
 
   return (
     <section className="space-y-4">
       <h2 className="text-2xl font-bold">Admin Dashboard</h2>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="card">Total Students: {totalStudents}</div>
-        <div className="card">Total Submissions: {submissions.length}</div>
+        <div className="card">Students in result set: {totalStudents}</div>
+        <div className="card">Submissions in result set: {submissions.length}</div>
       </div>
 
       <div className="card space-y-3">
@@ -90,14 +80,19 @@ export default async function ZartanPage({ searchParams }: { searchParams: { q?:
       </div>
 
       <div className="space-y-3">
-        {filteredSubmissions.map((submission) => (
+        {submissions.map((submission) => (
           <article key={submission.id} className="card space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-semibold">
                 {submission.name} - {submission.keyword}
               </p>
               <div className="flex gap-2">
-                <a className="rounded border border-slate-600 px-3 py-2" target="_blank" href={`/zartan/view/${submission.id}`}>
+                <a
+                  className="rounded border border-slate-600 px-3 py-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`/zartan/view/${submission.id}`}
+                >
                   View
                 </a>
                 <a className="rounded border border-slate-600 px-3 py-2" href={`/api/apps/${submission.id}?download=1`}>
@@ -125,7 +120,7 @@ export default async function ZartanPage({ searchParams }: { searchParams: { q?:
             </form>
           </article>
         ))}
-        {!filteredSubmissions.length && <p className="text-slate-500">No submissions found for this query.</p>}
+        {!submissions.length && <p className="text-slate-500">No submissions found for this query.</p>}
       </div>
     </section>
   );
