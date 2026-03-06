@@ -1,28 +1,28 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
 
 const protectedPublicRoutes = ['/', '/apps', '/portfolio', '/submit'];
 const ADMIN_PATHS = ['/zartan'];
 
-function pathMatches(pathname: string, routes: string[]) {
-  return routes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
-}
-
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
-  const token = await getToken({ req: request, secret: process.env.AUTH_SECRET });
-  const hasAdminSession = Boolean(token);
 
-  if (pathMatches(pathname, ADMIN_PATHS) && !hasAdminSession) {
+  const isAdminPath = ADMIN_PATHS.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  const sessionCookie = request.cookies.get('authjs.session-token')?.value || request.cookies.get('__Secure-authjs.session-token')?.value;
+
+  if (isAdminPath && !sessionCookie) {
     return NextResponse.redirect(new URL('/destro', request.url));
   }
 
-  if (!pathMatches(pathname, protectedPublicRoutes)) return NextResponse.next();
-  if (hasAdminSession) return NextResponse.next();
+  const isProtectedPublic = protectedPublicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+  if (!isProtectedPublic) return NextResponse.next();
+
+  if (sessionCookie) return NextResponse.next();
 
   const accessCookie = request.cookies.get('vibe_site_access')?.value;
-  if (accessCookie === 'granted') return NextResponse.next();
+  if (accessCookie === 'granted') {
+    return NextResponse.next();
+  }
 
   if (pathname === '/submit') return NextResponse.next();
   return NextResponse.redirect(new URL('/submit', request.url));
