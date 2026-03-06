@@ -2,7 +2,10 @@ import JSZip from 'jszip';
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { getAllSubmissions } from '@/lib/queries';
-import { safeName } from '@/lib/filename';
+
+function safeName(input: string) {
+  return input.replace(/[^a-z0-9_-]/gi, '_');
+}
 
 export async function GET() {
   const session = await auth();
@@ -12,8 +15,7 @@ export async function GET() {
   const zip = new JSZip();
 
   submissions.forEach((submission) => {
-    const filename = `${safeName(submission.name || 'student')}_${submission.student_number}_${safeName(submission.keyword)}.html`;
-    zip.file(filename, submission.html_code);
+    zip.file(`${safeName(submission.name || 'student')}_${safeName(submission.keyword)}.html`, submission.html_code);
   });
 
   const data = await zip.generateAsync({ type: 'uint8array' });
