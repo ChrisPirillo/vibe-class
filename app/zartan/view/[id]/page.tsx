@@ -2,6 +2,8 @@ import { redirect, notFound } from 'next/navigation';
 import { getSubmissionById } from '@/lib/queries';
 import { getAdminPayloadFromCookies } from '@/lib/netlify-auth';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminSubmissionViewPage({ params }: { params: { id: string } }) {
   const admin = await getAdminPayloadFromCookies();
   if (!admin) redirect('/destro');

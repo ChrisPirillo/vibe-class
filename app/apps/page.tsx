@@ -1,6 +1,8 @@
 import { AppFrame } from '@/components/AppFrame';
 import { getAllSubmissions } from '@/lib/queries';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AppsPage({
   searchParams
 }: {

@@ -34,7 +34,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const fileBase = `${safeName(row.name)}_${row.student_number}_${safeName(row.keyword)}`;
     zip.file(`${fileBase}.html`, row.html_code);
     const data = await zip.generateAsync({ type: 'uint8array' });
-    return new NextResponse(data, {
+    return new NextResponse(Buffer.from(data), {
       headers: {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${fileBase}.zip"`

@@ -11,7 +11,7 @@ export async function GET(_: Request, { params }: { params: { studentId: string 
   submissions.forEach((submission) => zip.file(`${student.name}_${submission.keyword}.html`, submission.html_code));
   const data = await zip.generateAsync({ type: 'uint8array' });
 
-  return new NextResponse(data, {
+  return new NextResponse(Buffer.from(data), {
     headers: {
       'Content-Type': 'application/zip',
       'Content-Disposition': `attachment; filename="${student.name}_portfolio.zip"`

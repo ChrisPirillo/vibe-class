@@ -4,6 +4,8 @@ import { AppFrame } from '@/components/AppFrame';
 import { PortfolioDownloadButton } from '@/components/PortfolioDownloadButton';
 import { getPortfolioStatusMessage } from '@/lib/portfolio-feedback';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PortfolioPage({
   params,
   searchParams
