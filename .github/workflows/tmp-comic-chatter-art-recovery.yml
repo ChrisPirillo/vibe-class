@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - tmp-comic-chatter-art-recovery
+  pull_request:
+    branches:
+      - main
+    paths:
+      - .github/workflows/tmp-comic-chatter-art-recovery.yml
 
 permissions:
   contents: read
