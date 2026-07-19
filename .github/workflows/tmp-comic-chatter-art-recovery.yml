@@ -1,0 +1,43 @@
+name: Temporary Comic Chatter art recovery
+
+on:
+  push:
+    branches:
+      - tmp-comic-chatter-art-recovery
+
+permissions:
+  contents: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download exact archived Art Pack 1 files
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p recovered-art
+          base="https://raw.githubusercontent.com/microsoft/comic-chat/main/v2.5-beta-1/artpack1"
+          for file in \
+            kevin.avb kwensa.avb maynard.avb rebecca.avb sage.avb scotty.avb \
+            den.bgb volcano.bgb
+          do
+            curl --fail --location --retry 4 --retry-all-errors \
+              "$base/$file" -o "recovered-art/$file"
+          done
+          (
+            cd recovered-art
+            sha256sum * > SHA256SUMS.txt
+            for file in *.avb *.bgb; do
+              printf '%s  %s\n' "$(git hash-object "$file")" "$file"
+            done > GIT-BLOB-SHAS.txt
+          )
+
+      - name: Upload recovered original files
+        uses: actions/upload-artifact@v4
+        with:
+          name: comic-chatter-missing-original-art
+          path: recovered-art/
+          if-no-files-found: error
+          retention-days: 1
