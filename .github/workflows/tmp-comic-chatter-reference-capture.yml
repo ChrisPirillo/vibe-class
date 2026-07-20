@@ -16,13 +16,13 @@ permissions:
 jobs:
   capture:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Download public original references
         shell: bash
         run: |
           set -u
-          mkdir -p references metrics
+          mkdir -p references metrics source-notes
           fetch() {
             local url="$1" out="$2"
             echo "Fetching $url"
@@ -55,7 +55,16 @@ jobs:
           cmap={cp:name for table in font['cmap'].tables for cp,name in table.cmap.items()}
           hmtx=font['hmtx'].metrics
           chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?;:\'\"-()[]/@#%&'
-          advances={ch:round(hmtx[cmap[ord(ch)]][0]/upm,8) for ch in chars if ord(ch) in cmap and cmap[ord(ch)] in hmtx}
+          glyph_for={ch:cmap.get(ord(ch)) for ch in chars}
+          advances={ch:round(hmtx[name][0]/upm,8) for ch,name in glyph_for.items() if name in hmtx}
+          reverse={name:ch for ch,name in glyph_for.items() if name}
+          kern={}
+          if 'kern' in font:
+              for table in font['kern'].kernTables:
+                  for (left,right),value in table.kernTable.items():
+                      a,b=reverse.get(left),reverse.get(right)
+                      if a and b and value:
+                          kern[a+b]=round(value/upm,8)
           names=[]
           for record in font['name'].names:
               if record.nameID in (1,2,4,6):
@@ -71,11 +80,30 @@ jobs:
             'names':names,
             'hhea':{'ascent':hhea.ascent/upm,'descent':hhea.descent/upm,'lineGap':hhea.lineGap/upm},
             'os2':{'typoAscender':os2.sTypoAscender/upm,'typoDescender':os2.sTypoDescender/upm,'typoLineGap':os2.sTypoLineGap/upm,'winAscent':os2.usWinAscent/upm,'winDescent':os2.usWinDescent/upm,'weightClass':os2.usWeightClass},
-            'advancesEm':advances
+            'advancesEm':advances,
+            'kernPairsEm':kern
           }
           open('metrics/comic-sans-ms-historical-metrics.json','w').write(json.dumps(payload,indent=2,sort_keys=True)+'\n')
           PY
           rm -f /tmp/comic.ttf
+
+      - name: Capture exact source font and compositor initialization snippets
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://github.com/microsoft/comic-chat/archive/refs/heads/main.zip' \
+            -o /tmp/comic-chat-main.zip
+          unzip -q /tmp/comic-chat-main.zip -d /tmp/comic-chat-source
+          root="$(find /tmp/comic-chat-source -mindepth 1 -maxdepth 1 -type d | head -1)"
+          {
+            echo '== SetFonts and font-info assignments =='
+            grep -R -n -E 'SetFonts\(|m_fiWNormal|m_fiWWhisper|m_fiShout|m_fiTitle' "$root/v2.5-beta-1" | head -200 || true
+            echo
+            echo '== Original panel and balloon constants =='
+            grep -R -n -E 'MINUNITPANEL|ONELINETHRESHOLD|XBORDER|YBORDER|TOPBORDER|BORDERFUDGE|m_borderWidth' "$root/v2.5-beta-1" | head -200 || true
+          } > source-notes/compositor-font-snippets.txt
+          rm -rf /tmp/comic-chat-main.zip /tmp/comic-chat-source
 
       - name: Upload reference and metrics artifact
         uses: actions/upload-artifact@v4
@@ -84,6 +112,7 @@ jobs:
           path: |
             references/
             metrics/
+            source-notes/
             SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 1
