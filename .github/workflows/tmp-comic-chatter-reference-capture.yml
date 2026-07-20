@@ -18,35 +18,34 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Download public original references and source snapshot
+      - name: Download public original references
         shell: bash
         run: |
-          set -euo pipefail
-          mkdir -p references source
-          curl --fail --location --retry 4 --retry-all-errors \
-            'https://dmcostello.com/wp-content/uploads/2016/08/Microsoft-Chat-2.5-1024x734.png' \
-            -o references/Microsoft-Chat-2.5.png
-          curl --fail --location --retry 4 --retry-all-errors \
-            'https://dmcostello.com/wp-content/uploads/2016/08/GroupChat-1024x771.png' \
-            -o references/GroupChat.png
-          curl --fail --location --retry 4 --retry-all-errors \
-            'https://www.pojoclan.com/comicchat/comicchat.JPG' \
-            -o references/pojoclan-comicchat.jpg
-          curl --fail --location --retry 4 --retry-all-errors \
-            'https://mermeliz.com/files/summary/comic600.jpg' \
-            -o references/comic600.jpg
-          curl --fail --location --retry 4 --retry-all-errors \
-            'https://github.com/microsoft/comic-chat/archive/refs/heads/main.zip' \
-            -o source/comic-chat-main.zip
-          sha256sum references/* source/* > SHA256SUMS.txt
+          set -u
+          mkdir -p references
+          fetch() {
+            local url="$1" out="$2"
+            echo "Fetching $url"
+            curl --location --retry 5 --retry-delay 2 --retry-all-errors \
+              --user-agent 'Mozilla/5.0 Comic Chatter visual parity research' \
+              --connect-timeout 20 --max-time 90 \
+              "$url" -o "references/$out"
+            test -s "references/$out" || rm -f "references/$out"
+          }
+          fetch 'https://dmcostello.com/wp-content/uploads/2016/08/Microsoft-Chat-2.5-1024x734.png' 'Microsoft-Chat-2.5.png'
+          fetch 'https://dmcostello.com/wp-content/uploads/2016/08/GroupChat-1024x771.png' 'GroupChat.png'
+          fetch 'https://mermeliz.com/files/summary/comic600.jpg' 'comic600.jpg'
+          fetch 'https://upload.wikimedia.org/wikipedia/en/3/31/MsComicChat.png' 'wikipedia-MsComicChat.png'
+          find references -type f -size +0c -print
+          test "$(find references -type f -size +0c | wc -l)" -ge 2
+          sha256sum references/* > SHA256SUMS.txt
 
       - name: Upload reference artifact
         uses: actions/upload-artifact@v4
         with:
-          name: comic-chatter-original-references-and-source
+          name: comic-chatter-original-references
           path: |
             references/
-            source/
             SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 1
