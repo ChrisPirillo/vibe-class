@@ -22,7 +22,7 @@ jobs:
         shell: bash
         run: |
           set -u
-          mkdir -p references
+          mkdir -p references metrics
           fetch() {
             local url="$1" out="$2"
             echo "Fetching $url"
@@ -35,17 +35,55 @@ jobs:
           fetch 'https://dmcostello.com/wp-content/uploads/2016/08/Microsoft-Chat-2.5-1024x734.png' 'Microsoft-Chat-2.5.png'
           fetch 'https://dmcostello.com/wp-content/uploads/2016/08/GroupChat-1024x771.png' 'GroupChat.png'
           fetch 'https://mermeliz.com/files/summary/comic600.jpg' 'comic600.jpg'
-          fetch 'https://upload.wikimedia.org/wikipedia/en/3/31/MsComicChat.png' 'wikipedia-MsComicChat.png'
           find references -type f -size +0c -print
           test "$(find references -type f -size +0c | wc -l)" -ge 2
           sha256sum references/* > SHA256SUMS.txt
 
-      - name: Upload reference artifact
+      - name: Extract historical Comic Sans metrics without publishing the font
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet fonttools
+          curl --fail --location --retry 5 --retry-all-errors \
+            'https://raw.githubusercontent.com/microsoft/comic-chat/c59ce0d74ac6033799a51c9df813c0c356da048f/v1.0/shared/comic.ttf' \
+            -o /tmp/comic.ttf
+          python - <<'PY'
+          from fontTools.ttLib import TTFont
+          import json
+          font=TTFont('/tmp/comic.ttf',lazy=False)
+          upm=font['head'].unitsPerEm
+          cmap={cp:name for table in font['cmap'].tables for cp,name in table.cmap.items()}
+          hmtx=font['hmtx'].metrics
+          chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?;:\'\"-()[]/@#%&'
+          advances={ch:round(hmtx[cmap[ord(ch)]][0]/upm,8) for ch in chars if ord(ch) in cmap and cmap[ord(ch)] in hmtx}
+          names=[]
+          for record in font['name'].names:
+              if record.nameID in (1,2,4,6):
+                  try: value=record.toUnicode()
+                  except Exception: continue
+                  item={'id':record.nameID,'value':value}
+                  if item not in names: names.append(item)
+          os2=font['OS/2']; hhea=font['hhea']
+          payload={
+            'source':'microsoft/comic-chat historical v1.0/shared/comic.ttf',
+            'sourceCommit':'c59ce0d74ac6033799a51c9df813c0c356da048f',
+            'unitsPerEm':upm,
+            'names':names,
+            'hhea':{'ascent':hhea.ascent/upm,'descent':hhea.descent/upm,'lineGap':hhea.lineGap/upm},
+            'os2':{'typoAscender':os2.sTypoAscender/upm,'typoDescender':os2.sTypoDescender/upm,'typoLineGap':os2.sTypoLineGap/upm,'winAscent':os2.usWinAscent/upm,'winDescent':os2.usWinDescent/upm,'weightClass':os2.usWeightClass},
+            'advancesEm':advances
+          }
+          open('metrics/comic-sans-ms-historical-metrics.json','w').write(json.dumps(payload,indent=2,sort_keys=True)+'\n')
+          PY
+          rm -f /tmp/comic.ttf
+
+      - name: Upload reference and metrics artifact
         uses: actions/upload-artifact@v4
         with:
-          name: comic-chatter-original-references
+          name: comic-chatter-original-references-and-metrics
           path: |
             references/
+            metrics/
             SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 1
